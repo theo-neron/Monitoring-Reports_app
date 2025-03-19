@@ -133,7 +133,7 @@ def main():
                         memory=True,
                         cache=False,
                         max_rpm=10,
-                        verbose=2
+                        verbose=True
                     )
                     
                     # Lancement de l'analyse
