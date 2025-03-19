@@ -45,8 +45,8 @@ def create_agents(main_topic, subtopics):
     agents = [
         Agent(
             role="Analyste de Recherche",
-            goal=f"Analyser en profondeur le sujet : {main_topic} et {subtopics}",
-            backstory=f"Expert dans l'analyse approfondie de sujets complexes, spécialisé sur {main_topic} et {subtopics}",
+            goal=f"Analyser en profondeur le sujet : {main_topic} et {', '.join(subtopics)}",
+            backstory=f"Expert dans l'analyse approfondie de sujets complexes, spécialisé sur {main_topic} et {', '.join(subtopics)}",
             verbose=True,
             allow_delegation=True,
             tools=[
@@ -57,7 +57,7 @@ def create_agents(main_topic, subtopics):
         ),
         Agent(
             role="Synthétiseur de Contenu",
-            goal=f"Synthétiser les informations collectées sur {main_topic} et {subtopics}",
+            goal=f"Synthétiser les informations collectées sur {main_topic} et {', '.join(subtopics)}",
             backstory="Expert dans la transformation d'informations brutes en insights structurés et compréhensibles",
             verbose=True,
             allow_delegation=True,
@@ -65,7 +65,7 @@ def create_agents(main_topic, subtopics):
         ),
         Agent(
             role="Rédacteur de Rapport",
-            goal=f"Rédiger un rapport détaillé et accessible sur {main_topic} et {subtopics}",
+            goal=f"Rédiger un rapport détaillé et accessible sur {main_topic} et {', '.join(subtopics)}",
             backstory="Rédacteur professionnel capable de transformer des analyses complexes en contenu clair et engageant",
             verbose=True,
             allow_delegation=True,
@@ -83,11 +83,11 @@ def create_tasks(agents, main_topic, subtopics):
         ),
         Task(
             description=f"Analyser en détail les données trouvées sur {main_topic} et {', '.join(subtopics)}",
-            expected_output="Un résumé analytique et structuré des aspects clés des recherches sur {main_topic} et {subtopics}",
+            expected_output=f"Un résumé analytique et structuré des aspects clés des recherches sur {main_topic} et {', '.join(subtopics)}",
             agent=agents[1]
         ),
         Task(
-            description="Rédiger un rapport final complet sur {main_topic} et {subtopics}",
+            description=f"Rédiger un rapport final complet sur {main_topic} et {', '.join(subtopics)}",
             expected_output="Un rapport détaillé de 1500-2000 mots",
             agent=agents[2]
         )
@@ -104,40 +104,42 @@ def main():
     )
     
     # Input des sous-thèmes
-    subtopics = st.text_input(
+    subtopics_input = st.text_input(
         "Quels sont les sous-thèmes ou aspects spécifiques à explorer ? (séparés par des virgules)", 
         placeholder="Ex: Éthique, Impact économique, Innovations récentes..."
     )
     
     # Bouton de lancement
     if st.button("Lancer l'analyse"):
-        if main_topic and subtopics:
+        if main_topic and subtopics_input:
             with st.spinner("Analyse en cours... Cela peut prendre quelques minutes."):
                 try:
                     # Préparation des inputs
+                    subtopics_list = [s.strip() for s in subtopics_input.split(',')]
                     inputs = {
                         "main_topic": main_topic,
-                        "subtopics": [s.strip() for s in subtopics.split(',')]
+                        "subtopics": subtopics_list
                     }
                     
                     # Création des agents et tâches
-                    agents = create_agents(main_topic, subtopics)
-                    tasks = create_tasks(agents, main_topic, subtopics)
-                    
+                    agents = create_agents(main_topic, subtopics_list)
+                    tasks = create_tasks(agents, main_topic, subtopics_list)
+
                     # Configuration du crew
                     crew = Crew(
                         agents=agents,
                         tasks=tasks,
                         process=Process.sequential,
                         memory=True,
-                        cache=True,
-                        max_rpm=10
+                        cache=False,
+                        max_rpm=10,
+                        verbose=2
                     )
                     
                     # Lancement de l'analyse
                     result = crew.kickoff(inputs=inputs)
-                    
-                    result_text = str(result)
+                    result_text = result.raw if hasattr(result, 'raw') else str(result)
+
                     
                     # Affichage des résultats
                     st.success("Analyse terminée !")
@@ -156,8 +158,10 @@ def main():
                     
                 except Exception as e:
                     # Journalisation de l'erreur détaillée
-                    st.error(f"Erreur lors de l'analyse : {traceback.format_exc()}")
-                    st.error(f"Une erreur est survenue : {str(e)}")
+                    st.error(f"Erreur détaillée : {traceback.format_exc()}")
+                    st.error(f"Type d'erreur : {type(e)}")
+                    st.error(f"Détails de l'erreur : {str(e)}")
+                    
         else:
             st.warning("Veuillez saisir un sujet principal et des sous-thèmes.")
 
