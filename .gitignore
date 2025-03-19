@@ -1,0 +1,30 @@
+# Fichiers d'environnement contenant des secrets
+.env
+.env.local
+.env.*
+!.env.example
+
+
+# Environnements virtuels Python
+venv/
+env/
+.venv/
+.env/
+ENV/
+
+# Fichiers de cache Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Dossiers de build
+dist/
+build/
+*.egg-info/
+
+# Fichiers système
+.DS_Store
+Thumbs.db
