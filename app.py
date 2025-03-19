@@ -11,6 +11,9 @@ from langchain_anthropic import ChatAnthropic
 from dotenv import load_dotenv
 from crewai_tools import *
 
+import warnings
+warnings.filterwarnings("ignore", category=SyntaxWarning)
+
 # Charger les variables d'environnement
 load_dotenv()
 
