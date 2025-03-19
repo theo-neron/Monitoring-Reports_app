@@ -81,7 +81,7 @@ def create_agents(main_topic, subtopics):
         Agent(
             role="Analyste de Recherche",
             goal=f"Analyser en profondeur le sujet : {main_topic} et {', '.join(subtopics)}",
-            backstory=f"Expert dans l'analyse approfondie de sujets complexes, spécialisé sur {main_topic} et {', '.join(subtopics)}",
+            backstory=f"Expert dans l'analyse approfondie de sujets complexes et de sujets comtemporains de 2025, spécialisé sur {main_topic} et {', '.join(subtopics)}",
             verbose=True,
             allow_delegation=True,
             tools=[
@@ -207,16 +207,46 @@ def main():
     # Bouton de lancement
     if st.button("Lancer l'analyse"):
         if main_topic and subtopics_input:
+            # Affichage d'un seul spinner
             with st.spinner("Analyse en cours... Cela peut prendre quelques minutes."):
-                
                 try:
                     # Préparation des inputs
                     subtopics_list = [s.strip() for s in subtopics_input.split(',')]
                     
-                    result = run_analysis(main_topic, subtopics_list)
-                    result_text = result.raw if hasattr(result, 'raw') else str(result)   
-                        
+                    # Exécution de l'analyse sans cache pour éviter le double spinner
+                    inputs = {
+                        "main_topic": main_topic,
+                        "subtopics": subtopics_list
+                    }
+                    
+                    agents = create_agents(main_topic, subtopics_list)
+                    tasks = create_tasks(agents, main_topic, subtopics_list)
 
+                    crew = Crew(
+                        agents=agents,
+                        tasks=tasks,
+                        process=Process.sequential,
+                        memory=True,
+                        cache=False,
+                        max_rpm=10,
+                        verbose=True
+                    )
+                    
+                    try:
+                        logger.info("Démarrage de l'analyse")
+                        result = crew.kickoff(inputs=inputs)
+                    except Exception as delegation_error:
+                        logger.error(f"Erreur lors de l'analyse: {str(delegation_error)}")
+                        if handle_delegation_error(delegation_error, crew):
+                            # Réessayer après correction
+                            logger.info("Tentative de récupération après erreur de délégation")
+                            result = crew.kickoff(inputs=inputs)
+                        else:
+                            # Si ce n'est pas une erreur de délégation connue, relancer
+                            raise delegation_error
+                    
+                    result_text = result.raw if hasattr(result, 'raw') else str(result)
+                    
                     # Affichage des résultats
                     st.success("Analyse terminée !")
                     
