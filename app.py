@@ -77,12 +77,12 @@ def create_agents(main_topic, subtopics):
 def create_tasks(agents, main_topic, subtopics):
     tasks = [
         Task(
-            description=f"Rechercher des informations sur {main_topic} et {subtopics}",
+            description=f"Rechercher des informations sur {main_topic} et {', '.join(subtopics)}",
             expected_output="Une liste structurée de sources fiables et récentes",
             agent=agents[0]
         ),
         Task(
-            description=f"Analyser en détail les données trouvées sur {main_topic} et {subtopics}",
+            description=f"Analyser en détail les données trouvées sur {main_topic} et {', '.join(subtopics)}",
             expected_output="Un résumé analytique et structuré des aspects clés des recherches sur {main_topic} et {subtopics}",
             agent=agents[1]
         ),
@@ -137,20 +137,21 @@ def main():
                     # Lancement de l'analyse
                     result = crew.kickoff(inputs=inputs)
                     
+                    result_text = str(result)
                     
                     # Affichage des résultats
                     st.success("Analyse terminée !")
                     
                     # Expander pour le résultat final
                     with st.expander("📄 Rapport Complet", expanded=True):
-                        st.write(result)
+                        st.write(result_text)
                     
                     # Bouton de téléchargement
                     st.download_button(
                         label="Télécharger le rapport",
-                        data=result,
-                        file_name=f"rapport_analyse_{main_topic.replace(' ', '_')}.md",
-                        mime="text/markdown"
+                        data=result_text,
+                        file_name=f"rapport_analyse_{main_topic.replace(' ', '_')}.txt",
+                        mime="text/plain"
                     )
                     
                 except Exception as e:
